@@ -7,17 +7,33 @@ document.addEventListener('DOMContentLoaded', () => {
     const avatarImg = document.getElementById('avatar');
 
     let count = getCookie('tapCount') ? parseInt(getCookie('tapCount')) : 0;
+    let lastClickDate = getCookie('lastClickDate') ? new Date(getCookie('lastClickDate')) : new Date();
+    const today = new Date();
+
+    // If the date has changed, reset the counter
+    if (today.toDateString() !== lastClickDate.toDateString()) {
+        count = 0;
+        setCookie('tapCount', count, 1);
+        setCookie('lastClickDate', today.toDateString(), 1);
+    }
+
     countDisplay.textContent = count;
 
     coin.addEventListener('click', (event) => {
-        count++;
-        countDisplay.textContent = count;
-        setCookie('tapCount', count, 365);
-        // Play sound with a chance of playing the special sound
-        if (Math.random() < 0.00005) {
-            playSound(specialSound);
+        // Allow up to 1000 clicks per day
+        if (count < 1000) {
+            count++;
+            countDisplay.textContent = count;
+            setCookie('tapCount', count, 1);
+            setCookie('lastClickDate', today.toDateString(), 1);
+            // Play sound with a chance of playing the special sound
+            if (Math.random() < 0.00005) {
+                playSound(specialSound);
+            } else {
+                playSound(clickSound);
+            }
         } else {
-            playSound(clickSound);
+            alert('You have reached the daily limit of 1000 clicks. Please try again tomorrow.');
         }
     });
 
