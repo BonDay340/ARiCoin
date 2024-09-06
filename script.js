@@ -1,34 +1,43 @@
 document.addEventListener('DOMContentLoaded', () => {
     const coin = document.getElementById('coin');
     const countDisplay = document.getElementById('count');
-    const limitDisplay = document.getElementById('limit'); // Element to show the click limit
+    const limitDisplay = document.getElementById('limit'); 
     const clickSound = document.getElementById('click-sound');
     const specialSound = document.getElementById('special-sound');
+    const coinRateDisplay = document.getElementById('coinRate'); // Element to display the coin rate
     const loginButton = document.getElementById('login-button');
     const avatarImg = document.getElementById('avatar');
 
     let count = getCookie('tapCount') ? parseInt(getCookie('tapCount')) : 0;
-    let limit = getCookie('tapLimit') ? parseInt(getCookie('tapLimit')) : 1000; // Start with 1000 limit
+    let limit = getCookie('tapLimit') ? parseInt(getCookie('tapLimit')) : 1000;
     let lastClickDate = getCookie('lastClickDate') ? new Date(getCookie('lastClickDate')) : new Date();
     const today = new Date();
 
-    // If the date has changed, only increase the limit by 1000 without resetting the count
+    let globalClicks = getCookie('globalClicks') ? parseInt(getCookie('globalClicks')) : 0; // Global click count
+    let coinRate = getCookie('coinRate') ? parseFloat(getCookie('coinRate')) : 1.0; // Start rate at 1 Ар
+
+    // If the date has changed, increase the limit by 1000
     if (today.toDateString() !== lastClickDate.toDateString()) {
-        limit += 1000; // Increase limit by 1000 each new day
+        limit += 1000; 
         setCookie('tapLimit', limit, 1);
         setCookie('lastClickDate', today.toDateString(), 1);
     }
 
     countDisplay.textContent = count;
-    limitDisplay.textContent = limit; // Display the current limit
+    limitDisplay.textContent = limit;
+    updateCoinRateDisplay(); // Initial display of the coin rate
 
     coin.addEventListener('click', (event) => {
-        // Limit clicks per day
         if (count < limit) {
             count++;
             countDisplay.textContent = count;
             setCookie('tapCount', count, 1);
-            // Play sound, with a chance to play the special sound
+            globalClicks++;
+            setCookie('globalClicks', globalClicks, 365); // Save global clicks
+            updateCoinRate(); // Update coin rate based on global clicks
+            setCookie('coinRate', coinRate, 365); // Save the updated coin rate
+
+            // Play sound with a small chance of playing the special sound
             if (Math.random() < 0.00005) {
                 playSound(specialSound);
             } else {
@@ -62,6 +71,28 @@ document.addEventListener('DOMContentLoaded', () => {
         return null;
     }
 
+    function updateCoinRate() {
+        // Increase coin rate based on global clicks (e.g., 1% increase for every 1000 clicks)
+        coinRate = 1 + (globalClicks / 10000); // 0.1% increase per 1000 global clicks
+
+        // Add some randomness to simulate market fluctuation
+        if (Math.random() < 0.1) { // 10% chance of fluctuation
+            const fluctuation = (Math.random() - 0.5) * 0.02; // +/- 2% fluctuation
+            coinRate += fluctuation;
+        }
+
+        // Ensure the coin rate is not negative
+        if (coinRate < 0.1) {
+            coinRate = 0.1;
+        }
+
+        updateCoinRateDisplay();
+    }
+
+    function updateCoinRateDisplay() {
+        coinRateDisplay.textContent = `Курс АрКоина: 100 АрК = ${coinRate.toFixed(2)} Ар`;
+    }
+
     loginButton.addEventListener('click', () => {
         const clientId = '1281660983651078244';
         const redirectUri = 'https://bonday340.github.io/ARiCoin/';
@@ -70,7 +101,6 @@ document.addEventListener('DOMContentLoaded', () => {
         window.location.href = authUrl;
     });
 
-    // Handle the Discord redirect directly on the main page
     function handleDiscordCallback() {
         const hash = window.location.hash.substring(1);
         const params = new URLSearchParams(hash);
@@ -90,7 +120,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 setCookie('avatarUrl', avatarUrl, 365);
                 displayAvatar(avatarUrl);
-                // Clear the hash after processing
                 window.location.hash = '';
             })
             .catch(error => console.error('Error fetching Discord user data:', error));
@@ -108,6 +137,5 @@ document.addEventListener('DOMContentLoaded', () => {
         loginButton.style.display = 'none';
     }
 
-    // Call this function on the main page
     handleDiscordCallback();
 });

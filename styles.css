@@ -9,13 +9,13 @@ body {
     align-items: center;
     height: 100vh;
     margin: 0;
-    font-family: Arial, sans-serif;
+    font-family: 'Monocraft', Arial, sans-serif; /* Применение шрифта Monocraft ко всему тексту */
     background-color: #303841;
 }
 
-span {
+span, h1 {
     color: #FFFFFF;
-    font-family: Monocraft;
+    font-family: 'Monocraft', Arial, sans-serif; /* Применение шрифта Monocraft к span и h1 */
     -webkit-font-smoothing: none;
     -moz-osx-font-smoothing: unset;
     font-smooth: none;
@@ -46,4 +46,15 @@ span {
     width: 40px;
     height: 40px;
     cursor: pointer;
+}
+
+.coin-rate {
+    position: fixed;
+    bottom: 10px;
+    right: 10px;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 10px;
+    border-radius: 5px;
+    font-family: 'Monocraft', Arial, sans-serif; /* Применение шрифта Monocraft к элементу coin-rate */
 }
