@@ -1,39 +1,41 @@
 document.addEventListener('DOMContentLoaded', () => {
     const coin = document.getElementById('coin');
     const countDisplay = document.getElementById('count');
+    const limitDisplay = document.getElementById('limit'); // Element to show the click limit
     const clickSound = document.getElementById('click-sound');
     const specialSound = document.getElementById('special-sound');
     const loginButton = document.getElementById('login-button');
     const avatarImg = document.getElementById('avatar');
 
     let count = getCookie('tapCount') ? parseInt(getCookie('tapCount')) : 0;
+    let limit = getCookie('tapLimit') ? parseInt(getCookie('tapLimit')) : 1000; // Start with 1000 limit
     let lastClickDate = getCookie('lastClickDate') ? new Date(getCookie('lastClickDate')) : new Date();
     const today = new Date();
 
-    // If the date has changed, reset the counter
+    // If the date has changed, only increase the limit by 1000 without resetting the count
     if (today.toDateString() !== lastClickDate.toDateString()) {
-        count = 0;
-        setCookie('tapCount', count, 1);
+        limit += 1000; // Increase limit by 1000 each new day
+        setCookie('tapLimit', limit, 1);
         setCookie('lastClickDate', today.toDateString(), 1);
     }
 
     countDisplay.textContent = count;
+    limitDisplay.textContent = limit; // Display the current limit
 
     coin.addEventListener('click', (event) => {
-        // Allow up to 1000 clicks per day
-        if (count < 1000) {
+        // Limit clicks per day
+        if (count < limit) {
             count++;
             countDisplay.textContent = count;
             setCookie('tapCount', count, 1);
-            setCookie('lastClickDate', today.toDateString(), 1);
-            // Play sound with a chance of playing the special sound
+            // Play sound, with a chance to play the special sound
             if (Math.random() < 0.00005) {
                 playSound(specialSound);
             } else {
                 playSound(clickSound);
             }
         } else {
-            alert('You have reached the daily limit of 1000 clicks. Please try again tomorrow.');
+            alert(`You have reached the daily limit of ${limit} clicks. Please try again tomorrow.`);
         }
     });
 
@@ -51,9 +53,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function getCookie(name) {
         const nameEQ = name + "=";
-        const ca = document.cookie.split(';');
-        for (let i = 0; i < ca.length; i++) {
-            let c = ca[i];
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            let c = cookies[i];
             while (c.charAt(0) === ' ') c = c.substring(1, c.length);
             if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
         }
