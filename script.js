@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     loginButton.addEventListener('click', () => {
         const clientId = '1281660983651078244';
-        const redirectUri = 'https://BonDay340.github.io/ari/';
+        const redirectUri = 'https://bonday340.github.io/ARiCoin/';
         const scope = 'identify';
         const authUrl = `https://discord.com/api/oauth2/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=token&scope=${scope}`;
         window.location.href = authUrl;
