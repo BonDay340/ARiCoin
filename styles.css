@@ -57,4 +57,5 @@ span, h1 {
     padding: 10px;
     border-radius: 5px;
     font-family: 'Monocraft', Arial, sans-serif; /* Применение шрифта Monocraft к элементу coin-rate */
+    z-index: 1000; /* Убедитесь, что элемент находится поверх остальных */
 }
