@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const limitDisplay = document.getElementById('limit');
     const clickSound = document.getElementById('click-sound');
     const specialSound = document.getElementById('special-sound');
-    const coinRateDisplay = document.getElementById('coinRate'); 
+    const coinRateDisplay = document.getElementById('coinRate');
     const loginButton = document.getElementById('login-button');
     const avatarImg = document.getElementById('avatar');
     const logoutButton = document.getElementById('logout-button');
@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const minCoinRate = 0.1;
 
     if (today.toDateString() !== lastClickDate.toDateString()) {
-        limit += 1000; 
+        limit += 1000;
         setCookie('tapLimit', limit, 1);
         setCookie('lastClickDate', today.toDateString(), 1);
         coinRate = Math.max(minCoinRate, coinRate - 0.5);
@@ -73,6 +73,10 @@ document.addEventListener('DOMContentLoaded', () => {
         return null;
     }
 
+    function deleteCookie(name) {
+        document.cookie = name + '=; Max-Age=-99999999;'; // Удаляем куки
+    }
+
     function updateCoinRate() {
         coinRate = 1 + (globalClicks / 1000);
         updateCoinRateDisplay();
@@ -95,12 +99,13 @@ document.addEventListener('DOMContentLoaded', () => {
     logoutButton.addEventListener('click', () => {
         deleteCookie('avatarUrl');
         deleteCookie('access_token');
-        logoutButton.style.display = 'none';
         avatarImg.style.display = 'none';
+        logoutButton.style.display = 'none';
         loginButton.style.display = 'block';
         alert('You have logged out successfully.');
     });
 
+    // Проверяем наличие токена и аватара
     function handleDiscordCallback() {
         const hash = window.location.hash.substring(1);
         const params = new URLSearchParams(hash);
@@ -114,11 +119,12 @@ document.addEventListener('DOMContentLoaded', () => {
             })
             .then(response => response.json())
             .then(data => {
-                const avatarUrl = data.avatar 
+                const avatarUrl = data.avatar
                     ? `https://cdn.discordapp.com/avatars/${data.id}/${data.avatar}.png`
                     : `https://cdn.discordapp.com/embed/avatars/${data.discriminator % 5}.png`;
 
                 setCookie('avatarUrl', avatarUrl, 365);
+                setCookie('access_token', accessToken, 365);
                 displayAvatar(avatarUrl);
                 window.location.hash = '';
             })
@@ -127,6 +133,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const storedAvatarUrl = getCookie('avatarUrl');
             if (storedAvatarUrl) {
                 displayAvatar(storedAvatarUrl);
+            } else {
+                loginButton.style.display = 'block';
+                logoutButton.style.display = 'none';
             }
         }
     }
@@ -136,10 +145,6 @@ document.addEventListener('DOMContentLoaded', () => {
         avatarImg.style.display = 'block';
         loginButton.style.display = 'none';
         logoutButton.style.display = 'block';
-    }
-
-    function deleteCookie(name) {
-        document.cookie = name + '=; Max-Age=-99999999;';
     }
 
     handleDiscordCallback();
