@@ -17,23 +17,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Восстанавливаем данные для пользователя
     function restoreUserData(userId) {
-        count = getCookie(`tapCount_${userId}`) ? parseInt(getCookie(`tapCount_${userId}`)) : 0;
-        limit = getCookie(`tapLimit_${userId}`) ? parseInt(getCookie(`tapLimit_${userId}`)) : 1000;
-        globalClicks = getCookie('globalClicks') ? parseInt(getCookie('globalClicks')) : 0;
-        coinRate = getCookie('coinRate') ? parseFloat(getCookie('coinRate')) : 1.0;
+        const storedCount = localStorage.getItem(`tapCount_${userId}`);
+        const storedLimit = localStorage.getItem(`tapLimit_${userId}`);
+        const storedGlobalClicks = localStorage.getItem('globalClicks');
+        const storedCoinRate = localStorage.getItem('coinRate');
+
+        count = storedCount ? parseInt(storedCount) : 0;
+        limit = storedLimit ? parseInt(storedLimit) : 1000;
+        globalClicks = storedGlobalClicks ? parseInt(storedGlobalClicks) : 0;
+        coinRate = storedCoinRate ? parseFloat(storedCoinRate) : 1.0;
 
         countDisplay.textContent = count;
         limitDisplay.textContent = limit;
         updateCoinRateDisplay();
     }
 
-    // Сохраняем данные пользователя в куки
+    // Сохраняем данные пользователя в localStorage
     function saveUserData() {
         if (userId) {
-            setCookie(`tapCount_${userId}`, count, 365);
-            setCookie(`tapLimit_${userId}`, limit, 365);
-            setCookie('globalClicks', globalClicks, 365);
-            setCookie('coinRate', coinRate, 365);
+            localStorage.setItem(`tapCount_${userId}`, count);
+            localStorage.setItem(`tapLimit_${userId}`, limit);
+            localStorage.setItem('globalClicks', globalClicks);
+            localStorage.setItem('coinRate', coinRate);
         }
     }
 
@@ -41,6 +46,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function resetUserData() {
         count = 0;
         countDisplay.textContent = count;
+        localStorage.removeItem(`tapCount_${userId}`);
+        localStorage.removeItem(`tapLimit_${userId}`);
+        saveUserData(); // Сохраняем обновлённые данные
     }
 
     // Обработчик клика по монете
@@ -59,33 +67,12 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             alert(`Вы достигли дневного лимита в ${limit} кликов. Пожалуйста, попробуйте завтра.`);
         }
+        updateCoinRate();
     });
 
     function playSound(audioElement) {
         const soundClone = audioElement.cloneNode();
         soundClone.play();
-    }
-
-    function setCookie(name, value, days) {
-        const date = new Date();
-        date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-        const expires = "expires=" + date.toUTCString();
-        document.cookie = name + "=" + value + ";" + expires + ";path=/";
-    }
-
-    function getCookie(name) {
-        const nameEQ = name + "=";
-        const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-            let c = cookies[i];
-            while (c.charAt(0) === ' ') c = c.substring(1, c.length);
-            if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
-        }
-        return null;
-    }
-
-    function deleteCookie(name) {
-        document.cookie = name + '=; Max-Age=-99999999; path=/'; // Удаляем куки
     }
 
     function updateCoinRate() {
@@ -109,8 +96,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Логика выхода из аккаунта Discord
     logoutButton.addEventListener('click', () => {
         resetUserData(); // Обнуляем клики при выходе
-        deleteCookie('avatarUrl');
-        deleteCookie('access_token');
+        localStorage.removeItem('avatarUrl');
+        localStorage.removeItem('access_token');
         avatarImg.style.display = 'none';
         logoutButton.style.display = 'none';
         loginButton.style.display = 'block';
@@ -136,16 +123,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     ? `https://cdn.discordapp.com/avatars/${data.id}/${data.avatar}.png`
                     : `https://cdn.discordapp.com/embed/avatars/${data.discriminator % 5}.png`;
 
-                setCookie('avatarUrl', avatarUrl, 365);
-                setCookie('access_token', accessToken, 365);
+                localStorage.setItem('avatarUrl', avatarUrl);
+                localStorage.setItem('access_token', accessToken);
                 displayAvatar(avatarUrl);
                 window.location.hash = ''; // Очищаем токен из URL
                 restoreUserData(userId); // Восстанавливаем клики для пользователя
             })
             .catch(error => console.error('Error fetching Discord user data:', error));
         } else {
-            const storedAvatarUrl = getCookie('avatarUrl');
-            const storedAccessToken = getCookie('access_token');
+            const storedAvatarUrl = localStorage.getItem('avatarUrl');
+            const storedAccessToken = localStorage.getItem('access_token');
 
             if (!storedAvatarUrl || !storedAccessToken) {
                 loginButton.style.display = 'block';
@@ -153,6 +140,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 resetUserData(); // Обнуляем данные, если не залогинен
             } else {
                 displayAvatar(storedAvatarUrl);
+                restoreUserData(userId);
             }
         }
     }
