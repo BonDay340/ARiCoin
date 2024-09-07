@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     const coin = document.getElementById('coin');
     const countDisplay = document.getElementById('count');
-    const limitDisplay = document.getElementById('limit'); 
+    const limitDisplay = document.getElementById('limit');
     const clickSound = document.getElementById('click-sound');
     const specialSound = document.getElementById('special-sound');
     const coinRateDisplay = document.getElementById('coinRate'); // Element to display the coin rate
@@ -15,12 +15,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let globalClicks = getCookie('globalClicks') ? parseInt(getCookie('globalClicks')) : 0; // Global click count
     let coinRate = getCookie('coinRate') ? parseFloat(getCookie('coinRate')) : 1.0; // Start rate at 1 Ар
+    const minCoinRate = 0.1; // Set a minimum coin rate
 
-    // If the date has changed, increase the limit by 1000
+    // If the date has changed, increase the limit by 1000 and reduce coin rate by 0.5
     if (today.toDateString() !== lastClickDate.toDateString()) {
         limit += 1000; 
         setCookie('tapLimit', limit, 1);
         setCookie('lastClickDate', today.toDateString(), 1);
+
+        // Reduce coin rate by 0.5, but don't let it fall below 0.1
+        coinRate = Math.max(minCoinRate, coinRate - 0.5);
+        setCookie('coinRate', coinRate, 365); // Save the updated coin rate
     }
 
     countDisplay.textContent = count;
@@ -72,20 +77,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateCoinRate() {
-        // Increase coin rate based on global clicks (e.g., 1% increase for every 1000 clicks)
-        coinRate = 1 + (globalClicks / 10000); // 0.1% increase per 1000 global clicks
-
-        // Add some randomness to simulate market fluctuation
-        if (Math.random() < 0.1) { // 10% chance of fluctuation
-            const fluctuation = (Math.random() - 0.5) * 0.02; // +/- 2% fluctuation
-            coinRate += fluctuation;
-        }
-
-        // Ensure the coin rate is not negative
-        if (coinRate < 0.1) {
-            coinRate = 0.1;
-        }
-
+        // Increase coin rate based on global clicks
+        coinRate = 1 + (globalClicks / 1000); // 0.1% increase for every 1000 clicks
         updateCoinRateDisplay();
     }
 
