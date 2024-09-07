@@ -1,0 +1,13 @@
+{
+  "name": "ari-main",
+  "version": "1.0.0",
+  "description": "ArCoin",
+  "main": "script.js",
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "https://github/BonDay340/ar/raw/main/banner.png"
+  },
+  "author": "BonDay340",
+  "license": "ISC"
+}
