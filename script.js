@@ -16,16 +16,16 @@ document.addEventListener('DOMContentLoaded', () => {
     let coinRate = 1.0;
 
     // Восстанавливаем данные для пользователя
-    function restoreUserData(userId) {
-        const storedCount = localStorage.getItem(`tapCount_${userId}`);
-        const storedLimit = localStorage.getItem(`tapLimit_${userId}`);
-        const storedGlobalClicks = localStorage.getItem('globalClicks');
-        const storedCoinRate = localStorage.getItem('coinRate');
-
-        count = storedCount ? parseInt(storedCount) : 0;
-        limit = storedLimit ? parseInt(storedLimit) : 1000;
-        globalClicks = storedGlobalClicks ? parseInt(storedGlobalClicks) : 0;
-        coinRate = storedCoinRate ? parseFloat(storedCoinRate) : 1.0;
+    function restoreUserData() {
+        if (userId) {
+            count = localStorage.getItem(`tapCount_${userId}`) ? parseInt(localStorage.getItem(`tapCount_${userId}`)) : 0;
+            limit = localStorage.getItem(`tapLimit_${userId}`) ? parseInt(localStorage.getItem(`tapLimit_${userId}`)) : 1000;
+        } else {
+            count = 0;
+            limit = 1000;
+        }
+        globalClicks = localStorage.getItem('globalClicks') ? parseInt(localStorage.getItem('globalClicks')) : 0;
+        coinRate = localStorage.getItem('coinRate') ? parseFloat(localStorage.getItem('coinRate')) : 1.0;
 
         countDisplay.textContent = count;
         limitDisplay.textContent = limit;
@@ -37,18 +37,24 @@ document.addEventListener('DOMContentLoaded', () => {
         if (userId) {
             localStorage.setItem(`tapCount_${userId}`, count);
             localStorage.setItem(`tapLimit_${userId}`, limit);
-            localStorage.setItem('globalClicks', globalClicks);
-            localStorage.setItem('coinRate', coinRate);
         }
+        localStorage.setItem('globalClicks', globalClicks);
+        localStorage.setItem('coinRate', coinRate);
     }
 
     // Обнуляем данные при выходе
     function resetUserData() {
-        count = 0;
+        if (userId) {
+            count = 0;
+            localStorage.removeItem(`tapCount_${userId}`);
+            localStorage.removeItem(`tapLimit_${userId}`);
+        }
         countDisplay.textContent = count;
-        localStorage.removeItem(`tapCount_${userId}`);
-        localStorage.removeItem(`tapLimit_${userId}`);
-        saveUserData(); // Сохраняем обновлённые данные
+        localStorage.removeItem('globalClicks');
+        localStorage.removeItem('coinRate');
+        coinRate = 1.0;
+        updateCoinRateDisplay(); // Обновляем отображение курса АрКоина
+        saveUserData(); // Сохраняем обнулённые данные
     }
 
     // Обработчик клика по монете
@@ -95,7 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Логика выхода из аккаунта Discord
     logoutButton.addEventListener('click', () => {
-        resetUserData(); // Обнуляем клики при выходе
+        resetUserData(); // Обнуляем клики и курс АрКоина при выходе
         localStorage.removeItem('avatarUrl');
         localStorage.removeItem('access_token');
         avatarImg.style.display = 'none';
@@ -127,7 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 localStorage.setItem('access_token', accessToken);
                 displayAvatar(avatarUrl);
                 window.location.hash = ''; // Очищаем токен из URL
-                restoreUserData(userId); // Восстанавливаем клики для пользователя
+                restoreUserData(); // Восстанавливаем клики для пользователя
             })
             .catch(error => console.error('Error fetching Discord user data:', error));
         } else {
@@ -140,7 +146,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 resetUserData(); // Обнуляем данные, если не залогинен
             } else {
                 displayAvatar(storedAvatarUrl);
-                restoreUserData(userId);
+                restoreUserData();
             }
         }
     }
