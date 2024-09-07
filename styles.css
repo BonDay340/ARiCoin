@@ -48,6 +48,17 @@ span, h1 {
     cursor: pointer;
 }
 
+#logout-button {
+    position: absolute;
+    top: 60px; /* ниже аватара */
+    right: 10px;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    display: none; /* По умолчанию скрыта */
+}
+
+
 .coin-rate {
     position: fixed;
     bottom: 10px;

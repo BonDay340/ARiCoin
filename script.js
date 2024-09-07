@@ -4,33 +4,31 @@ document.addEventListener('DOMContentLoaded', () => {
     const limitDisplay = document.getElementById('limit');
     const clickSound = document.getElementById('click-sound');
     const specialSound = document.getElementById('special-sound');
-    const coinRateDisplay = document.getElementById('coinRate'); // Element to display the coin rate
+    const coinRateDisplay = document.getElementById('coinRate'); 
     const loginButton = document.getElementById('login-button');
     const avatarImg = document.getElementById('avatar');
+    const logoutButton = document.getElementById('logout-button');
 
     let count = getCookie('tapCount') ? parseInt(getCookie('tapCount')) : 0;
     let limit = getCookie('tapLimit') ? parseInt(getCookie('tapLimit')) : 1000;
     let lastClickDate = getCookie('lastClickDate') ? new Date(getCookie('lastClickDate')) : new Date();
     const today = new Date();
 
-    let globalClicks = getCookie('globalClicks') ? parseInt(getCookie('globalClicks')) : 0; // Global click count
-    let coinRate = getCookie('coinRate') ? parseFloat(getCookie('coinRate')) : 1.0; // Start rate at 1 Ар
-    const minCoinRate = 0.1; // Set a minimum coin rate
+    let globalClicks = getCookie('globalClicks') ? parseInt(getCookie('globalClicks')) : 0;
+    let coinRate = getCookie('coinRate') ? parseFloat(getCookie('coinRate')) : 1.0;
+    const minCoinRate = 0.1;
 
-    // If the date has changed, increase the limit by 1000 and reduce coin rate by 0.5
     if (today.toDateString() !== lastClickDate.toDateString()) {
         limit += 1000; 
         setCookie('tapLimit', limit, 1);
         setCookie('lastClickDate', today.toDateString(), 1);
-
-        // Reduce coin rate by 0.5, but don't let it fall below 0.1
         coinRate = Math.max(minCoinRate, coinRate - 0.5);
-        setCookie('coinRate', coinRate, 365); // Save the updated coin rate
+        setCookie('coinRate', coinRate, 365);
     }
 
     countDisplay.textContent = count;
     limitDisplay.textContent = limit;
-    updateCoinRateDisplay(); // Initial display of the coin rate
+    updateCoinRateDisplay();
 
     coin.addEventListener('click', (event) => {
         if (count < limit) {
@@ -38,11 +36,10 @@ document.addEventListener('DOMContentLoaded', () => {
             countDisplay.textContent = count;
             setCookie('tapCount', count, 1);
             globalClicks++;
-            setCookie('globalClicks', globalClicks, 365); // Save global clicks
-            updateCoinRate(); // Update coin rate based on global clicks
-            setCookie('coinRate', coinRate, 365); // Save the updated coin rate
+            setCookie('globalClicks', globalClicks, 365);
+            updateCoinRate();
+            setCookie('coinRate', coinRate, 365);
 
-            // Play sound with a small chance of playing the special sound
             if (Math.random() < 0.00005) {
                 playSound(specialSound);
             } else {
@@ -77,8 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateCoinRate() {
-        // Increase coin rate based on global clicks
-        coinRate = 1 + (globalClicks / 1000); // 0.1% increase for every 1000 clicks
+        coinRate = 1 + (globalClicks / 1000);
         updateCoinRateDisplay();
     }
 
@@ -86,12 +82,23 @@ document.addEventListener('DOMContentLoaded', () => {
         coinRateDisplay.textContent = `Курс АрКоина: 100 АрК = ${coinRate.toFixed(2)} Ар`;
     }
 
+    // Логика входа через Discord
     loginButton.addEventListener('click', () => {
         const clientId = '1281660983651078244';
         const redirectUri = 'https://bonday340.github.io/ARiCoin/';
         const scope = 'identify';
         const authUrl = `https://discord.com/api/oauth2/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=token&scope=${scope}`;
         window.location.href = authUrl;
+    });
+
+    // Логика выхода из аккаунта Discord
+    logoutButton.addEventListener('click', () => {
+        deleteCookie('avatarUrl');
+        deleteCookie('access_token');
+        logoutButton.style.display = 'none';
+        avatarImg.style.display = 'none';
+        loginButton.style.display = 'block';
+        alert('You have logged out successfully.');
     });
 
     function handleDiscordCallback() {
@@ -128,6 +135,11 @@ document.addEventListener('DOMContentLoaded', () => {
         avatarImg.src = avatarUrl;
         avatarImg.style.display = 'block';
         loginButton.style.display = 'none';
+        logoutButton.style.display = 'block';
+    }
+
+    function deleteCookie(name) {
+        document.cookie = name + '=; Max-Age=-99999999;';
     }
 
     handleDiscordCallback();
