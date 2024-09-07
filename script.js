@@ -9,36 +9,50 @@ document.addEventListener('DOMContentLoaded', () => {
     const avatarImg = document.getElementById('avatar');
     const logoutButton = document.getElementById('logout-button');
 
-    let count = getCookie('tapCount') ? parseInt(getCookie('tapCount')) : 0;
-    let limit = getCookie('tapLimit') ? parseInt(getCookie('tapLimit')) : 1000;
-    let lastClickDate = getCookie('lastClickDate') ? new Date(getCookie('lastClickDate')) : new Date();
-    const today = new Date();
+    let userId = null;
+    let count = 0;
+    let limit = 1000;
+    let globalClicks = 0;
+    let coinRate = 1.0;
 
-    let globalClicks = getCookie('globalClicks') ? parseInt(getCookie('globalClicks')) : 0;
-    let coinRate = getCookie('coinRate') ? parseFloat(getCookie('coinRate')) : 1.0;
-    const minCoinRate = 0.1;
-
-    if (today.toDateString() !== lastClickDate.toDateString()) {
-        limit += 1000;
-        setCookie('tapLimit', limit, 1);
-        setCookie('lastClickDate', today.toDateString(), 1);
-        coinRate = Math.max(minCoinRate, coinRate - 0.5);
-        setCookie('coinRate', coinRate, 365);
+    // Функция обнуления данных при выходе или обновлении
+    function resetUserData() {
+        count = 0;
+        limit = 1000;
+        globalClicks = 0;
+        countDisplay.textContent = count;
+        limitDisplay.textContent = limit;
+        updateCoinRateDisplay();
     }
 
-    countDisplay.textContent = count;
-    limitDisplay.textContent = limit;
-    updateCoinRateDisplay();
+    // Восстанавливаем данные для пользователя (если залогинен)
+    function restoreUserData(userId) {
+        count = getCookie(`tapCount_${userId}`) ? parseInt(getCookie(`tapCount_${userId}`)) : 0;
+        limit = getCookie(`tapLimit_${userId}`) ? parseInt(getCookie(`tapLimit_${userId}`)) : 1000;
+        globalClicks = getCookie('globalClicks') ? parseInt(getCookie('globalClicks')) : 0;
+        coinRate = getCookie('coinRate') ? parseFloat(getCookie('coinRate')) : 1.0;
+
+        countDisplay.textContent = count;
+        limitDisplay.textContent = limit;
+        updateCoinRateDisplay();
+    }
+
+    // Сохраняем данные пользователя в куки
+    function saveUserData() {
+        if (userId) {
+            setCookie(`tapCount_${userId}`, count, 365);
+            setCookie(`tapLimit_${userId}`, limit, 365);
+            setCookie('globalClicks', globalClicks, 365);
+            setCookie('coinRate', coinRate, 365);
+        }
+    }
 
     coin.addEventListener('click', (event) => {
         if (count < limit) {
             count++;
             countDisplay.textContent = count;
-            setCookie('tapCount', count, 1);
             globalClicks++;
-            setCookie('globalClicks', globalClicks, 365);
-            updateCoinRate();
-            setCookie('coinRate', coinRate, 365);
+            saveUserData();
 
             if (Math.random() < 0.00005) {
                 playSound(specialSound);
@@ -77,20 +91,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.cookie = name + '=; Max-Age=-99999999; path=/'; // Удаляем куки
     }
 
-    function clearLoginData() {
-        deleteCookie('avatarUrl');
-        deleteCookie('access_token');
-        deleteCookie('tapCount');
-        deleteCookie('tapLimit');
-        deleteCookie('lastClickDate');
-        deleteCookie('globalClicks');
-        deleteCookie('coinRate');
-        avatarImg.style.display = 'none';
-        logoutButton.style.display = 'none';
-        loginButton.style.display = 'block';
-        window.location.hash = ''; // Очищаем токен из URL
-    }
-
     function updateCoinRate() {
         coinRate = 1 + (globalClicks / 1000);
         updateCoinRateDisplay();
@@ -111,7 +111,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Логика выхода из аккаунта Discord
     logoutButton.addEventListener('click', () => {
-        clearLoginData(); // Удаляем куки и очищаем состояние
+        resetUserData(); // Обнуляем данные пользователя
+        deleteCookie('avatarUrl');
+        deleteCookie('access_token');
+        avatarImg.style.display = 'none';
+        logoutButton.style.display = 'none';
+        loginButton.style.display = 'block';
         alert('You have logged out successfully.');
     });
 
@@ -129,6 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
             })
             .then(response => response.json())
             .then(data => {
+                userId = data.id;  // Привязываем данные к userId
                 const avatarUrl = data.avatar
                     ? `https://cdn.discordapp.com/avatars/${data.id}/${data.avatar}.png`
                     : `https://cdn.discordapp.com/embed/avatars/${data.discriminator % 5}.png`;
@@ -136,14 +142,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 setCookie('avatarUrl', avatarUrl, 365);
                 setCookie('access_token', accessToken, 365);
                 displayAvatar(avatarUrl);
-                window.location.hash = ''; // Очищаем токен из URL после логина
+                window.location.hash = ''; // Очищаем токен из URL
+                restoreUserData(userId); // Восстанавливаем клики для пользователя
             })
             .catch(error => console.error('Error fetching Discord user data:', error));
         } else {
+            resetUserData(); // Если пользователь не залогинен, обнуляем данные
             const storedAvatarUrl = getCookie('avatarUrl');
             const storedAccessToken = getCookie('access_token');
 
-            // Если токен или аватар отсутствуют, показываем кнопку входа
             if (!storedAvatarUrl || !storedAccessToken) {
                 loginButton.style.display = 'block';
                 logoutButton.style.display = 'none';
