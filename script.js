@@ -74,7 +74,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function deleteCookie(name) {
-        document.cookie = name + '=; Max-Age=-99999999;'; // Удаляем куки
+        document.cookie = name + '=; Max-Age=-99999999; path=/'; // Удаляем куки
+    }
+
+    function clearLoginData() {
+        deleteCookie('avatarUrl');
+        deleteCookie('access_token');
+        deleteCookie('tapCount');
+        deleteCookie('tapLimit');
+        deleteCookie('lastClickDate');
+        deleteCookie('globalClicks');
+        deleteCookie('coinRate');
+        avatarImg.style.display = 'none';
+        logoutButton.style.display = 'none';
+        loginButton.style.display = 'block';
+        window.location.hash = ''; // Очищаем токен из URL
     }
 
     function updateCoinRate() {
@@ -97,16 +111,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Логика выхода из аккаунта Discord
     logoutButton.addEventListener('click', () => {
-        deleteCookie('avatarUrl');
-        deleteCookie('access_token');
-        avatarImg.style.display = 'none';
-        logoutButton.style.display = 'none';
-        loginButton.style.display = 'block';
-        window.location.hash = ''; // Очищаем токен из URL
+        clearLoginData(); // Удаляем куки и очищаем состояние
         alert('You have logged out successfully.');
     });
 
-    // Проверяем наличие токена и аватара
+    // Проверяем наличие токена и аватара при загрузке
     function handleDiscordCallback() {
         const hash = window.location.hash.substring(1);
         const params = new URLSearchParams(hash);
@@ -132,11 +141,14 @@ document.addEventListener('DOMContentLoaded', () => {
             .catch(error => console.error('Error fetching Discord user data:', error));
         } else {
             const storedAvatarUrl = getCookie('avatarUrl');
-            if (storedAvatarUrl) {
-                displayAvatar(storedAvatarUrl);
-            } else {
+            const storedAccessToken = getCookie('access_token');
+
+            // Если токен или аватар отсутствуют, показываем кнопку входа
+            if (!storedAvatarUrl || !storedAccessToken) {
                 loginButton.style.display = 'block';
                 logoutButton.style.display = 'none';
+            } else {
+                displayAvatar(storedAvatarUrl);
             }
         }
     }
