@@ -15,17 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let globalClicks = 0;
     let coinRate = 1.0;
 
-    // Функция обнуления данных при выходе или обновлении
-    function resetUserData() {
-        count = 0;
-        limit = 1000;
-        globalClicks = 0;
-        countDisplay.textContent = count;
-        limitDisplay.textContent = limit;
-        updateCoinRateDisplay();
-    }
-
-    // Восстанавливаем данные для пользователя (если залогинен)
+    // Восстанавливаем данные для пользователя
     function restoreUserData(userId) {
         count = getCookie(`tapCount_${userId}`) ? parseInt(getCookie(`tapCount_${userId}`)) : 0;
         limit = getCookie(`tapLimit_${userId}`) ? parseInt(getCookie(`tapLimit_${userId}`)) : 1000;
@@ -47,6 +37,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Обнуляем данные при выходе
+    function resetUserData() {
+        count = 0;
+        countDisplay.textContent = count;
+    }
+
+    // Обработчик клика по монете
     coin.addEventListener('click', (event) => {
         if (count < limit) {
             count++;
@@ -60,7 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 playSound(clickSound);
             }
         } else {
-            alert(`You have reached the daily limit of ${limit} clicks. Please try again tomorrow.`);
+            alert(`Вы достигли дневного лимита в ${limit} кликов. Пожалуйста, попробуйте завтра.`);
         }
     });
 
@@ -92,7 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateCoinRate() {
-        coinRate = 1 + (globalClicks / 1000);
+        coinRate = 1 + (globalClicks / 1000); // Увеличиваем курс АрКоина на 0.1 за каждые 1000 кликов
         updateCoinRateDisplay();
     }
 
@@ -111,13 +108,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Логика выхода из аккаунта Discord
     logoutButton.addEventListener('click', () => {
-        resetUserData(); // Обнуляем данные пользователя
+        resetUserData(); // Обнуляем клики при выходе
         deleteCookie('avatarUrl');
         deleteCookie('access_token');
         avatarImg.style.display = 'none';
         logoutButton.style.display = 'none';
         loginButton.style.display = 'block';
-        alert('You have logged out successfully.');
+        alert('Вы успешно вышли из аккаунта.');
     });
 
     // Проверяем наличие токена и аватара при загрузке
@@ -147,13 +144,13 @@ document.addEventListener('DOMContentLoaded', () => {
             })
             .catch(error => console.error('Error fetching Discord user data:', error));
         } else {
-            resetUserData(); // Если пользователь не залогинен, обнуляем данные
             const storedAvatarUrl = getCookie('avatarUrl');
             const storedAccessToken = getCookie('access_token');
 
             if (!storedAvatarUrl || !storedAccessToken) {
                 loginButton.style.display = 'block';
                 logoutButton.style.display = 'none';
+                resetUserData(); // Обнуляем данные, если не залогинен
             } else {
                 displayAvatar(storedAvatarUrl);
             }
