@@ -102,6 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
         avatarImg.style.display = 'none';
         logoutButton.style.display = 'none';
         loginButton.style.display = 'block';
+        window.location.hash = ''; // Очищаем токен из URL
         alert('You have logged out successfully.');
     });
 
@@ -126,7 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 setCookie('avatarUrl', avatarUrl, 365);
                 setCookie('access_token', accessToken, 365);
                 displayAvatar(avatarUrl);
-                window.location.hash = '';
+                window.location.hash = ''; // Очищаем токен из URL после логина
             })
             .catch(error => console.error('Error fetching Discord user data:', error));
         } else {
